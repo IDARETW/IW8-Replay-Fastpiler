@@ -1,0 +1,9 @@
+{
+  "input_md5": "1c238fe327f2ecc3b0db924c5b425439",
+  "image_base": 5368709120,
+  "text_start": 4096,
+  "text_end": 37031936,
+  "instruction_count": 5401229,
+  "instruction_bytes": 23053814,
+  "noncode_bytes": 13974026
+}

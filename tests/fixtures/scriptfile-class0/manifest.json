@@ -1,0 +1,153 @@
+{
+  "schema": "replay-scriptfile-class0-authored-fixtures-v1",
+  "status": "sixteen-compiler-probes-pinned",
+  "compiler_probe_receipt_sha256": "b3e012c65b0b08888b270fe9ec6cbff47642d29c592d753e077a7252d07645a3",
+  "compiled_operand_audit_sha256": "9597867502091c9ffe8448a2d97bd117d62d6ffc9ac9bd1fa781facbe6e93e04",
+  "field_contract_sha256": "d68b7e861a6baa3882d24b5b53b71980ea9aebf7d92ba88f1bc580ab3d125286",
+  "cases": [
+    {
+      "descriptor_row_index": 0,
+      "field_name": "code_classname",
+      "token": "0xd7",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_1.gsc",
+      "source_sha256": "285965a956a6571ca9ff55c2ad2e937125d8ae977ac92b2a80ab87da167d6b25",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_1.gscbin",
+      "payload_sha256": "31f49b4783a971ebbeae6d13f9260709837bc8ba12db178249df1328a0abbb39"
+    },
+    {
+      "descriptor_row_index": 1,
+      "field_name": "classname",
+      "token": "0xd4",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_2.gsc",
+      "source_sha256": "87448e011633ba25c9aeaac9f7fbd2518d06c37f95349da809040f3e6ce01085",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_2.gscbin",
+      "payload_sha256": "974b97c20a2c5ca93dabf83eeeb5f95edea06cee7e62d05cfa51d7b5134aebdb"
+    },
+    {
+      "descriptor_row_index": 2,
+      "field_name": "origin",
+      "token": "0x2c5",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_3.gsc",
+      "source_sha256": "71180452d8ab0d153d099967237a43c8cb245847115e148c407d55db7cf3c7f2",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_3.gscbin",
+      "payload_sha256": "8694d601ccd2d90d5f9ee76380db0a92addf8b5855513188a34deed7fe92d201"
+    },
+    {
+      "descriptor_row_index": 3,
+      "field_name": "model",
+      "token": "0x28c",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_4.gsc",
+      "source_sha256": "d2333451233aad0e6c6e1c2ecda50c519869c261d912d0b4ba05bdd9b850024d",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_4.gscbin",
+      "payload_sha256": "f0031a928032a6c2e8e8dc14be7aea049d346d20157e6e8a106539cdebbf4ffc"
+    },
+    {
+      "descriptor_row_index": 4,
+      "field_name": "spawnflags",
+      "token": "0x39d",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_5.gsc",
+      "source_sha256": "c5821844f24874a447483745182f3ad1ff04eae1446ae533c427e2c76989f6bd",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_5.gscbin",
+      "payload_sha256": "0cd17663fdea3228e7c0653e64649bac5696a90f775e42718962f006c76d0af8"
+    },
+    {
+      "descriptor_row_index": 5,
+      "field_name": "notarget",
+      "token": "0x2b5",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_6.gsc",
+      "source_sha256": "af74c3d734158f74b9f7be374408d597dcde3a6d6dd629f196235998839def9e",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_6.gscbin",
+      "payload_sha256": "328e974e0ba8f79cd88e354a0617d7d53f6c268949e7b00bd371bb968482e67f"
+    },
+    {
+      "descriptor_row_index": 6,
+      "field_name": "target",
+      "token": "0x42e",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_7.gsc",
+      "source_sha256": "5e5b59d94f87399162577e84a53aede4a521df6ab85ba1585783226572ca9d18",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_7.gscbin",
+      "payload_sha256": "ab647edc9b4cb4530accc8d159000fcea9b33268cd5ff69f3265dea0720b05a9"
+    },
+    {
+      "descriptor_row_index": 7,
+      "field_name": "targetname",
+      "token": "0x430",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_8.gsc",
+      "source_sha256": "541fa5a21bbabc54f540682a0ba8668c713ccf0d033e10f4d302442eda62190b",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_8.gscbin",
+      "payload_sha256": "89617309f0799b2df38482a0371f9e486675baef59c158aa092d4d2e2b39c943"
+    },
+    {
+      "descriptor_row_index": 8,
+      "field_name": "health",
+      "token": "0x1e7",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_9.gsc",
+      "source_sha256": "948a18b7056d7a73cf826fac214cfc259650044a1c8f5c0de4ab72d2a64804e2",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_9.gscbin",
+      "payload_sha256": "59d6599c170538b6c480c70f15aabba1361b560439760bc0bba41b777d8549b3"
+    },
+    {
+      "descriptor_row_index": 9,
+      "field_name": "dmg",
+      "token": "0x149",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_10.gsc",
+      "source_sha256": "6042098aad5dfb3c440522652137812d12cec5982bc102e116b08c219af09590",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_10.gscbin",
+      "payload_sha256": "4093e3627addebc0b20cb5acf5a85e11b850c39f1ef465179e3eb8e8f6b081c9"
+    },
+    {
+      "descriptor_row_index": 10,
+      "field_name": "angles",
+      "token": "0x50",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_11.gsc",
+      "source_sha256": "c025195f8dcb099653e3e8bdc0fb5aac12fc50873b2e1d57a78b73e111c434ad",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_11.gscbin",
+      "payload_sha256": "d6ab7a40794d9bede4e3cb19e719d8cee5c4117a1fdfd749d69cdea61e9fcbd0"
+    },
+    {
+      "descriptor_row_index": 11,
+      "field_name": "birthtime",
+      "token": "0x86",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_12.gsc",
+      "source_sha256": "346300e6b8937ce5f5ee22cdb7ee63a57f1233673df599f5c3de8312cae637b5",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_12.gscbin",
+      "payload_sha256": "c504c132c751351afb80d0878a8a746c297f73e47e59d2e901d9d82c3be52351"
+    },
+    {
+      "descriptor_row_index": 12,
+      "field_name": "script_linkname",
+      "token": "0x34a",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_13.gsc",
+      "source_sha256": "5ef2a0496c2d7c33bd146368bf74d7694c938a2cfd65163cf1cdce074f5c4025",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_13.gscbin",
+      "payload_sha256": "677dca41edfc4579b1706f2f5603ac2d5bc951f60aef76a0ac849a75c74f2213"
+    },
+    {
+      "descriptor_row_index": 13,
+      "field_name": "script_linkto",
+      "token": "0x34b",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_14.gsc",
+      "source_sha256": "34460e5b7ae6c450654288b108a0053fc107a6ace80d28cda76556db70614c3b",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_14.gscbin",
+      "payload_sha256": "d1e864ac1ccabc430615e4073eb26f4a748ffbecdc89ad5e52379f67e90ea0fb"
+    },
+    {
+      "descriptor_row_index": 14,
+      "field_name": "script_noteworthy",
+      "token": "0x34d",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_15.gsc",
+      "source_sha256": "e8e738f79028fdb055bd865018e52a021c4ed117bb35b8882bf779719964c05e",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_15.gscbin",
+      "payload_sha256": "8386f353230efb2898b63998b6ed3cb7b477214244421bacbca2cf995e1a1fe3"
+    },
+    {
+      "descriptor_row_index": 15,
+      "field_name": "slidevelocity",
+      "token": "0x387",
+      "source_path": "tests/fixtures/scriptfile-class0/class0_probe_16.gsc",
+      "source_sha256": "71a7bb3cf8872ad9c330d9011bcee527fbbaf7ad6e3032578980cb2a64849942",
+      "payload_path": "tests/fixtures/scriptfile-class0/class0_probe_16.gscbin",
+      "payload_sha256": "abdbee02a4eea6ab8719bbd574981b68aeeadde7a57ff38598e0cdfa09d037ac"
+    }
+  ]
+}

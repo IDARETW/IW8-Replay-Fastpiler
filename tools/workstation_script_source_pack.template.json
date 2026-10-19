@@ -1,0 +1,18 @@
+{
+  "format": "replay-frontend-script-source-pack-v1",
+  "profile": "mw169_mp_frontendc3s5",
+  "transform": "1.59-1.67",
+  "scripts": [
+    {"name": "1788", "gscbin": "gscbin/1788.gscbin", "decompiled_source": "decompiled/1788.gsc"},
+    {"name": "1823", "gscbin": "gscbin/1823.gscbin", "decompiled_source": "decompiled/1823.gsc"},
+    {"name": "1904", "gscbin": "gscbin/1904.gscbin", "decompiled_source": "decompiled/1904.gsc"},
+    {"name": "scripts/mp/gametypes/frontend.gsc", "gscbin": "gscbin/frontend.gscbin", "decompiled_source": "decompiled/frontend.gsc"},
+    {"name": "scripts/mp/maps/mp_frontendc3s5/gen/mp_frontendc3s5_art.gsc", "gscbin": "gscbin/mp_frontendc3s5_art.gscbin", "decompiled_source": "decompiled/mp_frontendc3s5_art.gsc"},
+    {"name": "scripts/mp/maps/mp_frontendc3s5/gen/mp_frontendc3s5_fx.gsc", "gscbin": "gscbin/mp_frontendc3s5_fx_gen.gscbin", "decompiled_source": "decompiled/mp_frontendc3s5_fx_gen.gsc"},
+    {"name": "scripts/mp/maps/mp_frontendc3s5/gen/mp_frontendc3s5_sound.gsc", "gscbin": "gscbin/mp_frontendc3s5_sound.gscbin", "decompiled_source": "decompiled/mp_frontendc3s5_sound.gsc"},
+    {"name": "scripts/mp/maps/mp_frontendc3s5/mp_frontendc3s5.gsc", "gscbin": "gscbin/mp_frontendc3s5.gscbin", "decompiled_source": "decompiled/mp_frontendc3s5.gsc"},
+    {"name": "scripts/mp/maps/mp_frontendc3s5/mp_frontendc3s5_fx.gsc", "gscbin": "gscbin/mp_frontendc3s5_fx.gscbin", "decompiled_source": "decompiled/mp_frontendc3s5_fx.gsc"},
+    {"name": "scripts/mp/maps/mp_frontendc3s5/mp_frontendc3s5_lighting.gsc", "gscbin": "gscbin/mp_frontendc3s5_lighting.gscbin", "decompiled_source": "decompiled/mp_frontendc3s5_lighting.gsc"},
+    {"name": "scripts/mp/maps/mp_frontendc3s5/mp_frontendc3s5_precache.gsc", "gscbin": "gscbin/mp_frontendc3s5_precache.gscbin", "decompiled_source": "decompiled/mp_frontendc3s5_precache.gsc"}
+  ]
+}

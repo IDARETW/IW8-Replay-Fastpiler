@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "project": "atian-cod-tools",
+  "repository": "https://github.com/IDARETW/atian-cod-tools.git",
+  "repository_ref": "refs/heads/codex/mw2019-complete",
+  "base_commit": "6acfe4aeb3a122bc623c8f71971b2c2327f8d877",
+  "canonical_upstream": "https://github.com/ate47/atian-cod-tools.git",
+  "provenance_note": "The exact base commit is advertised on the IDARETW Replay-workstation branch. At verification time the canonical ate47 repository HEAD was 5d4d1ee6f7676f4529b99fc89c2382dde8b856b7; the bootstrap therefore fetches the pinned commit from the verified fork ref.",
+  "patch_file": "acts-replay-workstation.patch",
+  "patch_sha256": "414048d6bb60810c9999fea4a0bf2f7b7ab6c074711a4cd6271b863f49fb2040",
+  "license_files": [
+    "LICENSE.md",
+    "licenses/"
+  ],
+  "license_note": "Retain the upstream license and each initialized submodule license. The build uses GPL_BUILD=OFF; this is not a blanket relicensing of ACTS or its dependencies.",
+  "build_prerequisites": [
+    "Git",
+    "CMake 3.20 or newer",
+    "Visual Studio 2022 C++ x64 build tools (or a compatible CMake generator)",
+    "ACTS non-GPL source submodules initialized by the bootstrap"
+  ],
+  "changed_paths": [
+    "src/core/acts/tools/fastfile/fastfile_handlers.cpp",
+    "src/core/acts/tools/fastfile/fastfile_handlers.hpp",
+    "src/core/acts/tools/fastfile/handlers/handler_game_mw19_replay.cpp",
+    "src/core/acts/tools/lua/lua_jit.cpp",
+    "src/core/acts/tools/mw19/mw19_ff_stream.hpp",
+    "src/core/acts/tools/mw19/mw19_linker.cpp",
+    "src/core/acts/tools/mw19/mw19_payload.cpp"
+  ],
+  "build": {
+    "cmake_target": "AtianCodToolsCLI",
+    "output_name": "acts.exe",
+    "gpl_build": false,
+    "disable_qt": true,
+    "disable_opencl": true
+  }
+}

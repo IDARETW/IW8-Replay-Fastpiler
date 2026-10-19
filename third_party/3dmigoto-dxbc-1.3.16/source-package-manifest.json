@@ -1,0 +1,66 @@
+{
+  "schema": "replay120-dxbc-source-package-v1",
+  "upstream": {
+    "commit": "cbc4993ca67b6d639e06c578d4e3dc8b3780243f",
+    "repository": "https://github.com/bo3b/3Dmigoto.git",
+    "tag": "1.3.16"
+  },
+  "source_patch": {
+    "sha256": "85c3d9a0ab9d1023da131bdf57576377503dfd0f0b823b17e21d6ef7fd3ef984",
+    "path": "source-fix.patch"
+  },
+  "files": [
+    {
+      "sha256": "5b6426ef9c6a80c1744958c0bcce7ec2c8482664f7450bf4cf0d675f031b43ad",
+      "path": "AUTHORS.txt"
+    },
+    {
+      "sha256": "818478bd50011d3738ab839a63986a1d0032444461cc68a10065be88edce0f6c",
+      "path": "COPYING.txt"
+    },
+    {
+      "sha256": "5b9f9119196043d3789814c874dfb8dbcecf2bfc8247227d8926ccdf2cf9566a",
+      "path": "D3D_Shaders/Assembler.cpp"
+    },
+    {
+      "sha256": "af4521f83fd4ddd431e9878c9bc50e781da7c3bb3c0726114346761075753273",
+      "path": "D3D_Shaders/SignatureParser.cpp"
+    },
+    {
+      "sha256": "612dd6c21ed49711f32f051b20dba67d8adb437c2eab38a9d2f28977e39db13a",
+      "path": "D3D_Shaders/stdafx.h"
+    },
+    {
+      "sha256": "a2761fdbd4c8925741ddea678ee8398de930207e447666bc6a76d5f72684c04f",
+      "path": "D3D_Shaders/targetver.h"
+    },
+    {
+      "sha256": "0b383d5a63da644f628d99c33976ea6487ed89aaa59f0b3257992deac1171e6b",
+      "path": "LICENSE.GPL.txt"
+    },
+    {
+      "sha256": "f8591483317b7c15d4cc57e17ab39a352376ff78a9eedf4b29d12beec804cc5b",
+      "path": "LICENSE.MIT.txt"
+    },
+    {
+      "sha256": "d8502b3b4a5f98f4b936b006601b45ab69818681a9c1900887df780b062502d2",
+      "path": "log.h"
+    },
+    {
+      "sha256": "dfa0d1327156aae9fe097fd1406f60f94de40508b6f7a816cd2e756cb7dc7fcb",
+      "path": "portable_dxbc_cli.cpp"
+    },
+    {
+      "sha256": "bfc6d0fbb8f61a3fadeedcd12f759bdaaed5fd2c4e37673ffd61790c9c25ef11",
+      "path": "README.md"
+    },
+    {
+      "sha256": "1db3aca1f9144eb986cd43f69b20070e40678626cfcd82056380b095085c6861",
+      "path": "shader.h"
+    },
+    {
+      "sha256": "85c3d9a0ab9d1023da131bdf57576377503dfd0f0b823b17e21d6ef7fd3ef984",
+      "path": "source-fix.patch"
+    }
+  ]
+}

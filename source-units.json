@@ -1,0 +1,6 @@
+{
+  "schema": 1,
+  "description": "Generated source-unit identities. No addresses, extents, ABI or unwind definitions. Managed by tools/source_catalog.py.",
+  "units": [],
+  "imports": []
+}

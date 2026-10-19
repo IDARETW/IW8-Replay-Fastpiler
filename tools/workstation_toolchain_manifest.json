@@ -1,0 +1,179 @@
+{
+  "schema": 1,
+  "title": "Replay workstation codec toolchain",
+  "platform": "windows-x64",
+  "policy": "Download only pinned public upstream release assets; never replace a differing existing file. Game-specific binaries and ACTS are supplied/built separately.",
+  "tools": [
+    {
+      "id": "gsc_tool",
+      "version": "1.5.1",
+      "kind": "zip-member",
+      "project": "https://github.com/xensik/gsc-tool",
+      "release": "https://github.com/xensik/gsc-tool/releases/tag/1.5.1",
+      "url": "https://github.com/xensik/gsc-tool/releases/download/1.5.1/windows-x64-release.zip",
+      "archive_sha256": "c70744996c4801bd564760143cc9d735ef951359bae31d72a52f291cd1fef36b",
+      "member": "gsc-tool.exe",
+      "member_sha256": "1adfd67414a9b886cbad57ee0378f622eed485bcef7711322aee478e298fadcb",
+      "install_path": "tools/bin/gsc-tool-1.5.1/gsc-tool.exe",
+      "license": "Upstream repository/release terms; retain project license with the tool cache.",
+      "consumer": "REPLAY_GSC_TOOL is already honored by workstation_asset_codecs.py and workstation_fastfiles.py."
+    },
+    {
+      "id": "dxbc_decompiler",
+      "version": "1.3.16",
+      "kind": "zip-members",
+      "project": "https://github.com/bo3b/3Dmigoto",
+      "release": "https://github.com/bo3b/3Dmigoto/releases/tag/1.3.16",
+      "url": "https://github.com/bo3b/3Dmigoto/releases/download/1.3.16/cmd_Decompiler-1.3.16.zip",
+      "archive_sha256": "5e72e067dfcb15c36f106efa74d805055eec5314dc84b8fca8e65d835683a1b2",
+      "members": [
+        {
+          "name": "cmd_Decompiler.exe",
+          "sha256": "67582ced9261b8fb23a50cee09c788c821d0524d40264721369b410d5321dab8"
+        },
+        {
+          "name": "d3dcompiler_46.dll",
+          "sha256": "60f76ec7169397c425023d5927a3c3c34599fa329814053cace6171e20adb353"
+        },
+        {
+          "name": "COPYING.txt",
+          "sha256": null
+        },
+        {
+          "name": "LICENSE.MIT.txt",
+          "sha256": null
+        },
+        {
+          "name": "README.md",
+          "sha256": null
+        }
+      ],
+      "install_dir": "tools/bin/cmd_Decompiler-1.3.16",
+      "license": "MIT for 3Dmigoto; bundled d3dcompiler_46.dll is Microsoft redistributable material. Preserve upstream notices.",
+      "consumer": "Configured by setup as REPLAY_DXBC_TOOL with SHA-256; selected at codec call time."
+    },
+    {
+      "id": "texconv",
+      "version": "may2026",
+      "kind": "file",
+      "project": "https://github.com/microsoft/DirectXTex",
+      "release": "https://github.com/microsoft/DirectXTex/releases/tag/may2026",
+      "url": "https://github.com/microsoft/DirectXTex/releases/download/may2026/texconv.exe",
+      "sha256": "dcfdec10244e02cf5037fba089c55fb7e1326b1c8181742d77d15fa5cb5eef06",
+      "install_path": "tools/bin/texconv-may2026.exe",
+      "license": "MIT; DirectXTex release/source notices are available at the linked upstream release.",
+      "consumer": "Configured by setup as REPLAY_TEXCONV with SHA-256; selected at codec call time."
+    },
+    {
+      "id": "luajit_decompiler_cod",
+      "version": "Oct_23_2025",
+      "kind": "file",
+      "project": "https://github.com/marsinator358/luajit-decompiler-v2",
+      "release": "https://github.com/marsinator358/luajit-decompiler-v2/releases/tag/Oct_23_2025",
+      "url": "https://github.com/marsinator358/luajit-decompiler-v2/releases/download/Oct_23_2025/luajit-decompiler-v2-cod.exe",
+      "sha256": "b4b74169951805fb7da2ee2c9743c31909509c9e7e1bb6d457c97bfe8d606634",
+      "install_path": "tools/bin/luajit-decompiler-v2-cod.exe",
+      "license": "MIT; preserve upstream source/license notices when redistributing.",
+      "consumer": "Archived optional upstream variant; setup uses the pinned source build verified against Replay LuaJIT v2 chunks.",
+      "install_default": false
+    }
+  ],
+  "owner_supplied": [
+    {
+      "id": "replay_executable",
+      "purpose": "Target identity, native Lua compiler profile source, and Replay reader validation.",
+      "sha256": "68fb1cbcb2924182724004039de55a4c50152bb6561803c4898b7930b38132f0",
+      "sensitive": true,
+      "must_not_download": true
+    },
+    {
+      "id": "replay_sqlite",
+      "purpose": "Target-bound function-name/address catalog input; RVAs and API bindings are derived by name from this database, never typed into setup config.",
+      "sha256": "819e2c6e7f046e0d03f2acd72cb0e7ba51cc7b33cbe51df68ec3a7ef7b36d8d4",
+      "sensitive": true,
+      "must_not_download": true
+    },
+    {
+      "id": "oodle_decoder",
+      "purpose": "Optional native fastfile/image decode dependency copied from the owner's Replay install.",
+      "filename": "oo2core_7_win64.dll",
+      "sha256": "e9a320b81b0892246f951b77939cdb20473c2d3fc348a6b02bdde84306bc087d",
+      "sensitive": true,
+      "must_not_download": true
+    },
+    {
+      "id": "sab_generator",
+      "purpose": "Optional ZoneTool sound-bank authoring backend; path is supplied by owner config, not downloaded by this setup.",
+      "filename": "sound.py",
+      "sensitive": false,
+      "must_not_download": true
+    }
+  ],
+  "source_built": [
+    {
+      "id": "acts_replay",
+      "version": "pinned workstation fork commit 6acfe4aeb3a122bc623c8f71971b2c2327f8d877 plus reviewed patch b85e578d53318d760f94c05325bfe81d6cda2a01906dd2803d8804c701f09cea",
+      "bootstrap": "python tools/bootstrap_workstation_acts.py <destination> --build",
+      "repository": "https://github.com/IDARETW/atian-cod-tools.git",
+      "canonical_project": "https://github.com/ate47/atian-cod-tools",
+      "binary_download": false,
+      "requirements": [
+        "Git",
+        "CMake",
+        "Visual Studio 2022 x64 C++ tools",
+        "pinned ACTS submodules"
+      ]
+    },
+    {
+      "id": "luajit_decompiler",
+      "version": "6a8a0cec48fdf175dddaca5d3fbfe3aa59b5550a plus unattended command-line patch",
+      "bootstrap": "python tools/bootstrap_workstation_lua.py <destination>",
+      "repository": "https://github.com/marsinator358/luajit-decompiler-v2.git",
+      "binary_download": false,
+      "requirements": [
+        "Git",
+        "xmake",
+        "Visual Studio x64 C++ tools"
+      ]
+    },
+    {
+      "id": "dxbc_decompiler_source",
+      "version": "3Dmigoto 1.3.16 with pinned Replay compute-stage parser/container fixes",
+      "kind": "source-build",
+      "source_package": "third_party/3dmigoto-dxbc-1.3.16",
+      "source_package_manifest_sha256": "c3a4ff17cf7ab1ced0b0686d675a22d1109da2164f05a138b752efe248da400d",
+      "bootstrap": "python tools/bootstrap_workstation_dxbc.py <destination>",
+      "install_dir": ".toolchains/dxbc-compute-v1",
+      "receipt": "bootstrap-receipt.json",
+      "executable": "cmd_Decompiler.exe",
+      "binary_download": false,
+      "install_default": true,
+      "requirements": [
+        "Visual Studio x64 C++ tools",
+        "Windows SDK",
+        "vswhere"
+      ]
+    }
+  ],
+  "native_lua_profile": {
+    "generated_from": [
+      "owner Replay EXE",
+      "owner Replay SQLite function catalog"
+    ],
+    "bindings_by_catalog_name": {
+      "lua_newstate": "lua_newstate",
+      "lua_loadx": "lua_loadx",
+      "lj_cf_string_dump": "sub_1420A4830",
+      "writer_buf": "sub_1420A5EB0",
+      "lua_tolstring": "lua_tolstring (optional diagnostics only)"
+    },
+    "manual_rvas": false,
+    "requires_local_analysis_evidence": false
+  },
+  "integration_notes": [
+    "Lua compiler API bindings are derived by name from the target-matched owner SQLite database. Setup creates an adjacent native compiler profile and records its provenance; no manual RVAs are accepted.",
+    "Public tool and source-built tool hashes flow from setup to the server and durable build workers. Owner scene script packs remain outside source exports.",
+    "No proprietary game binary, fastfile, database or Oodle DLL is downloaded by this manifest.",
+    "The source-built DXBC CLI is the default for new workstation setups. The pinned public 3Dmigoto release remains available only through the explicit -UseLegacyPublicDxbc setup option and is never overwritten. Setup verifies the source-package manifest, bootstrap receipt, and executable hash before writing tools.dxbc."
+  ]
+}

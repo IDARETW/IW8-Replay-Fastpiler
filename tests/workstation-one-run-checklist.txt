@@ -1,0 +1,13 @@
+Replay workstation validation
+
+1. Supply the matching Replay executable and Diaphora SQLite export to setup.
+2. Start the workstation and open its local URL.
+3. Browse recovered function names, aliases, assembly, and global data.
+4. Confirm the source manifests are empty before authoring replacements.
+5. Create a replacement, save it, and check its source binding and revision.
+6. Build with Engine source only. Review PE verification, relocation auditing,
+   source provenance, and the published output hashes.
+7. If asset tools are configured, stage a supported asset edit and build with
+   Engine source and saved asset edits. Check the native package receipt.
+8. Test verified output in a separate game installation and record the observed
+   behavior. A successful build alone does not establish runtime correctness.

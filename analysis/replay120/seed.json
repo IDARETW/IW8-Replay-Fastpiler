@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "profile": "replay-1.20",
+  "image_sha256": "68fb1cbcb2924182724004039de55a4c50152bb6561803c4898b7930b38132f0",
+  "image_md5": "1c238fe327f2ecc3b0db924c5b425439",
+  "provenance": "Matching IDA instruction boundaries and explicit image-relative references. No executable sections or game assembly are included. Recovery checks the seeds and the supplied image.",
+  "files": {
+    "code-items.bin": "c82616166f9cea9dca4a94c28e5f7907f0986f9e2dd40f83f06cc97f52050ffb",
+    "noncode-items.bin": "5eec483c4d23467293933c3f317388eb875095fb57564bce70b10b678533dc64",
+    "ida-rva-fixups.bin": "fa6425a1860f517b747b557c7f89e4b9cc606c5f48113020dad4bb84e2cf2ceb",
+    "ida-switch-references.json": "5ef6f9f5c92a579f5f4a49996e6e8543418f89ac9030d84a6b6b1b395900ea2a",
+    "ida-immediate-references.json": "5e5665a8b11481b48308c156a9f8c5b92acc81a195aafc176199a609155ff147",
+    "ida-code-report.json": "500bde0e5aef6a6734a6b793b1a6af5b694835c88a18eaaa9370aabdb42b014e",
+    "proxy-signatures.json": "a5338d955b09046ec0b16f3a9625b7955c763aae07dc722e474e6078745f932f"
+  }
+}

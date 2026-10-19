@@ -1,0 +1,612 @@
+diff --git a/D3D_Shaders/Assembler.cpp b/D3D_Shaders/Assembler.cpp
+index 29f0744..016c84f 100644
+--- a/D3D_Shaders/Assembler.cpp
++++ b/D3D_Shaders/Assembler.cpp
+@@ -1,5 +1,7 @@
+ #include "stdafx.h"
+ #include "float.h"
++#include <errno.h>
++#include <stdexcept>
+ 
+ using namespace std;
+ 
+@@ -351,6 +353,154 @@ static bool assemble_special_purpose_register(string &s, vector<DWORD> &v, token
+ 
+ static vector<DWORD> assembleOp(string s, bool special = false);
+ 
++static bool parse_immediate_index(const string &s, DWORD *value)
++{
++	if (s.empty() || s[0] < '0' || s[0] > '9')
++		return false;
++	char *end = NULL;
++	errno = 0;
++	unsigned long parsed = strtoul(s.c_str(), &end, 10);
++	if (errno == ERANGE || end == s.c_str() || *end || parsed > 0xffffffffUL)
++		return false;
++	*value = (DWORD)parsed;
++	return true;
++}
++
++static bool parse_index_offset(const string &s, long *value)
++{
++	if (s.empty())
++		return false;
++	char *end = NULL;
++	errno = 0;
++	long parsed = strtol(s.c_str(), &end, 10);
++	if (errno == ERANGE || end == s.c_str() || *end)
++		return false;
++	*value = parsed;
++	return true;
++}
++
++static void append_index_dimension(const string &expression, unsigned *representation,
++		vector<DWORD> *encoded)
++{
++	DWORD immediate;
++	if (parse_immediate_index(expression, &immediate)) {
++		*representation = 0; // Immediate32
++		encoded->push_back(immediate);
++		return;
++	}
++
++	string register_expression = expression;
++	long offset = 0;
++	bool has_explicit_offset = false;
++	size_t plus = expression.find(" + ");
++	if (plus != string::npos) {
++		register_expression = expression.substr(0, plus);
++		if (!parse_index_offset(expression.substr(plus + 3), &offset) ||
++			offset < (-2147483647L - 1L) || offset > 2147483647L)
++			throw AssemblerParseError(expression, "Unsupported relative constant-buffer index expression");
++		has_explicit_offset = true;
++	}
++	if (register_expression.empty())
++		throw AssemblerParseError(expression, "Relative constant-buffer index has no register expression");
++	vector<DWORD> relative = assembleOp(register_expression);
++	if (relative.empty())
++		throw AssemblerParseError(expression, "Relative constant-buffer index did not encode");
++	if (has_explicit_offset) {
++		*representation = 3; // Immediate32 + Relative, including an explicit zero offset
++		encoded->push_back((DWORD)offset);
++	} else {
++		*representation = 2; // Relative
++	}
++	encoded->insert(encoded->end(), relative.begin(), relative.end());
++}
++
++struct declaration_range_operand {
++	DWORD register_index;
++	DWORD first;
++	DWORD last;
++	DWORD count;
++};
++
++static bool parse_declaration_range_operand(const string &text, const char *prefix,
++		bool cbuffer, declaration_range_operand *range)
++{
++	const size_t prefix_len = strlen(prefix);
++	if (text.compare(0, prefix_len, prefix) != 0)
++		return false;
++	size_t open = text.find('[', prefix_len);
++	if (open == string::npos)
++		return false;
++	size_t close = text.find(']', open + 1);
++	auto malformed = [&text]() {
++		throw AssemblerParseError(text, "Malformed ranged declaration operand");
++	};
++	if (close == string::npos) {
++		if (text.find(':', open + 1) != string::npos)
++			malformed();
++		return false;
++	}
++	string bounds = text.substr(open + 1, close - open - 1);
++	size_t colon = bounds.find(':');
++	if (colon == string::npos) {
++		if (text.find(':', close + 1) != string::npos)
++			malformed();
++		return false; // Ordinary single-index operands still use assembleOp.
++	}
++	if (bounds.find(':', colon + 1) != string::npos)
++		malformed();
++	DWORD register_index, first, last;
++	if (!parse_immediate_index(text.substr(prefix_len, open - prefix_len), &register_index) ||
++		!parse_immediate_index(bounds.substr(0, colon), &first) ||
++		!parse_immediate_index(bounds.substr(colon + 1), &last) || first > last)
++		malformed();
++	range->register_index = register_index;
++	range->first = first;
++	range->last = last;
++	range->count = 0;
++	size_t cursor = close + 1;
++	if (cbuffer) {
++		// The constant-buffer vector count must immediately follow the register range.
++		if (cursor >= text.size() || text[cursor] != '[')
++			malformed();
++		size_t count_close = text.find(']', cursor + 1);
++		if (count_close == string::npos || count_close + 1 != text.size() ||
++			!parse_immediate_index(text.substr(cursor + 1, count_close - cursor - 1), &range->count))
++			malformed();
++	} else if (cursor != text.size()) {
++		malformed();
++	}
++	return true;
++}
++
++static vector<DWORD> assemble_declaration_range_operand(const declaration_range_operand &range,
++		unsigned file)
++{
++	DWORD op = 0;
++	token_operand *operand = (token_operand *)&op;
++	operand->comps_enum = 2;
++	operand->mode = 1;
++	operand->sel = 0xe4;
++	operand->file = file;
++	operand->num_indices = 3;
++	vector<DWORD> encoded;
++	encoded.push_back(op);
++	encoded.push_back(range.register_index);
++	encoded.push_back(range.first);
++	encoded.push_back(range.last);
++	return encoded;
++}
++
++static bool parse_declaration_space(const vector<string> &words, size_t index, DWORD *space)
++{
++	if (index >= words.size())
++		return false;
++	const string prefix = "space=";
++	if (words[index].compare(0, prefix.size(), prefix) != 0 ||
++		!parse_immediate_index(words[index].substr(prefix.size()), space))
++		throw AssemblerParseError(words[index], "Invalid register space in declaration");
++	return true;
++}
++
+ static vector<DWORD> assemble_cbvox_operand(string &s, vector<DWORD> &v, token_operand *tOp, bool special, DWORD num)
+ {
+ 	tOp->num_indices = 2;
+@@ -381,6 +531,13 @@ static vector<DWORD> assemble_cbvox_operand(string &s, vector<DWORD> &v, token_o
+ 		s.erase(s.begin());
+ 		tOp->num_indices = 1;
+ 		size_t start = s.find("][");
++		// A relative second index must immediately follow the first index.
++		// Otherwise malformed text such as cb2[7]garbage[r2.w + 202]
++		// would bypass the two-index parser and be partially accepted below.
++		size_t first_close = s.find(']');
++		size_t later_open = first_close == string::npos ? string::npos : s.find('[', first_close + 1);
++		if (later_open != string::npos && later_open != first_close + 1)
++			throw AssemblerParseError(s, "Unexpected text between operand index dimensions");
+ 		if (start != string::npos) {
+ 			size_t end = s.find("]", start + 1);
+ 			string index0 = s.substr(s.find("[") + 1, start - 1);
+@@ -452,6 +609,41 @@ static vector<DWORD> assemble_cbvox_operand(string &s, vector<DWORD> &v, token_o
+ 		size_t start = s.find('[');
+ 		size_t end = s.find(']', start);
+ 		index = s.substr(start + 1, end - start - 1);
++		// A constant-buffer operand can carry three immediate index dimensions:
++		// the cb register (sNum), the array element, and the vector element.
++		// Microsoft's disassembler prints the latter two as cbN[a][b], but the
++		// legacy Flugan parser below only consumed the first bracket pair. That
++		// silently dropped b and emitted a 2D operand. Preserve the explicit
++		// three-dimensional form, and fail closed for unsupported expressions.
++		size_t second_start = end == string::npos ? string::npos : s.find('[', end + 1);
++		if (tOp->file == 8 && second_start != string::npos) {
++			size_t second_end = s.find(']', second_start + 1);
++			if (end == string::npos || second_start != end + 1 || second_end == string::npos ||
++				s.find('[', second_end + 1) != string::npos ||
++				(second_end + 1 < s.size() && s[second_end + 1] != '.'))
++				throw AssemblerParseError(s, "Unsupported constant-buffer index dimensions");
++
++			string second_index = s.substr(second_start + 1, second_end - second_start - 1);
++			DWORD register_index;
++			if (!parse_immediate_index(sNum, &register_index))
++				throw AssemblerParseError(s, "Constant-buffer register index must be an immediate integer");
++			vector<DWORD> encoded_indices;
++			unsigned index1_repr = 0;
++			unsigned index2_repr = 0;
++			tOp->num_indices = 3;
++			append_index_dimension(index, &index1_repr, &encoded_indices);
++			append_index_dimension(second_index, &index2_repr, &encoded_indices);
++			tOp->index1_repr = index1_repr;
++			tOp->index2_repr = index2_repr;
++			v.push_back(register_index);
++			v.insert(v.end(), encoded_indices.begin(), encoded_indices.end());
++			if (second_end + 1 < s.size())
++				handleSwizzle(s.substr(second_end + 2), tOp, special);
++			else
++				handleSwizzle("", tOp, special);
++			v.insert(v.begin(), tOp->op);
++			return v;
++		}
+ 	}
+ 	if (hasIndex) {
+ 		if (index.find('+') < index.size()) {
+@@ -696,9 +888,23 @@ static vector<DWORD> assembleOp(string s, bool special)
+ 		ext |= 0x81;
+ 	}
+ 
+-	// Processing this after absolute value so that |var {type}| will be
+-	// processed in a natural order, though this function also strips the
+-	// tag as a secondary measure (either would be sufficient by itself):
++	// DXBC encodes non-uniform resource/sampler indexing as the bit-17
++	// modifier on an extended operand token (type 1). Keep it attached to
++	// the indexed operand and reject lookalike or misplaced annotations.
++	const string nonuniform_tag = " { nonuniform }";
++	size_t nonuniform_pos = s.find(" { nonuniform");
++	if (nonuniform_pos != string::npos) {
++		if (nonuniform_pos + nonuniform_tag.size() != s.size() ||
++			s.compare(nonuniform_pos, nonuniform_tag.size(), nonuniform_tag) != 0 ||
++			nonuniform_pos == 0 || (s[0] != 't' && s[0] != 'T' && s[0] != 's' && s[0] != 'S'))
++			throw AssemblerParseError(s, "Malformed nonuniform resource/sampler operand annotation");
++		s.erase(nonuniform_pos);
++		tOp->extended = 1;
++		ext |= 0x00020001; // Extended operand type 1, NonUniform bit 17.
++	}
++
++	// Processing minimum precision after operand-level nonuniform tagging
++	// keeps the two extension fields composable without losing either one.
+ 	parse_min_precision_tag(s, v, tOp, &ext);
+ 
+ 	if (tOp->extended)
+@@ -724,9 +930,9 @@ static vector<DWORD> assembleOp(string s, bool special)
+ 
+ 	if (s[0] == 'r') {
+ 		tOp->file = 0;
+-	} else if (s[0] == 's') {
++	} else if (s[0] == 's' || s[0] == 'S') {
+ 		tOp->file = 6;
+-	} else if (s[0] == 't') {
++	} else if (s[0] == 't' || s[0] == 'T') {
+ 		tOp->file = 7;
+ 	} else if (s[0] == 'g') {
+ 		tOp->file = 0x1F;
+@@ -739,6 +945,31 @@ static vector<DWORD> assembleOp(string s, bool special)
+ 
+ 	s.erase(s.begin());
+ 	tOp->num_indices = 1;
++	size_t open_index = s.find('[');
++	if ((tOp->file == 6 || tOp->file == 7) && open_index != string::npos) {
++		size_t close_index = s.find(']', open_index + 1);
++		if (close_index == string::npos || s.find('[', close_index + 1) != string::npos ||
++			(close_index + 1 < s.size() && s[close_index + 1] != '.'))
++			throw AssemblerParseError(s, "Malformed indexed resource or sampler operand");
++		DWORD register_index;
++		if (!parse_immediate_index(s.substr(0, open_index), &register_index))
++			throw AssemblerParseError(s, "Resource or sampler register index must be immediate");
++		vector<DWORD> encoded_index;
++		unsigned index1_repr = 0;
++		append_index_dimension(s.substr(open_index + 1, close_index - open_index - 1),
++			&index1_repr, &encoded_index);
++		tOp->num_indices = 2;
++		tOp->index1_repr = index1_repr;
++		size_t swizzle_pos = close_index + 1;
++		if (swizzle_pos < s.size())
++			handleSwizzle(s.substr(swizzle_pos + 1), tOp, special);
++		else
++			handleSwizzle("", tOp, special);
++		v.push_back(register_index);
++		v.insert(v.end(), encoded_index.begin(), encoded_index.end());
++		v.insert(v.begin(), op);
++		return v;
++	}
+ 	num = atoi(s.substr(0, s.find('.')).c_str());
+ 	v.push_back(num);
+ 	if (s.find('.') < s.size()) {
+@@ -791,6 +1022,17 @@ static vector<string> strToWords(string s)
+ 			}
+ 		}
+ 
++		// Keep the resource/sampler nonuniform extension marker attached
++		// to its operand, including the spaces in D3D's printed syntax.
++		if (end != string::npos && !s.compare(end, 13, " { nonuniform")) {
++			size_t close = s.find('}', end);
++			if (close == string::npos)
++				throw AssemblerParseError(s, "Unterminated nonuniform resource/sampler annotation");
++			end = close + 1;
++			if (end && end <= s.size() && s[end] == ',')
++				end++;
++		}
++
+ 		// Keep min precision tag with the operand. Since the icb
+ 		// syntax also uses braces we match part of the min precision
+ 		// type here to avoid grouping something we don't want
+@@ -1727,23 +1969,41 @@ static vector<DWORD> assembleIns(string s)
+ 		v.insert(v.end(), os.begin(), os.end());
+ 		assembleResourceDeclarationType(&w[1], &v);
+ 	} else if (o == "dcl_resource_texture1d") {
+-		check_num_ops(s, w, 2);
+-		vector<DWORD> os = assembleOp(w[2]);
++		check_num_ops(s, w, 2, 3);
++		declaration_range_operand range;
++		bool ranged = parse_declaration_range_operand(w[2], "T", false, &range);
++		vector<DWORD> os = ranged ? assemble_declaration_range_operand(range, 7) : assembleOp(w[2]);
+ 		ins->opcode = 0x58;
+ 		ins->_11_23 = 2;
+-		ins->length = 4;
+ 		v.push_back(op);
+ 		v.insert(v.end(), os.begin(), os.end());
+ 		assembleResourceDeclarationType(&w[1], &v);
++		if (w.size() > 3) {
++			DWORD space;
++			if (!ranged || !parse_declaration_space(w, 3, &space))
++				throw AssemblerParseError(s, "Resource register space requires an explicit ranged operand");
++			v.push_back(space);
++		}
++		ins->length = (DWORD)v.size();
++		v[0] = op;
+ 	} else if (o == "dcl_resource_texture1darray") {
+-		check_num_ops(s, w, 2);
+-		vector<DWORD> os = assembleOp(w[2]);
++		check_num_ops(s, w, 2, 3);
++		declaration_range_operand range;
++		bool ranged = parse_declaration_range_operand(w[2], "T", false, &range);
++		vector<DWORD> os = ranged ? assemble_declaration_range_operand(range, 7) : assembleOp(w[2]);
+ 		ins->opcode = 0x58;
+ 		ins->_11_23 = 7;
+-		ins->length = 4;
+ 		v.push_back(op);
+ 		v.insert(v.end(), os.begin(), os.end());
+ 		assembleResourceDeclarationType(&w[1], &v);
++		if (w.size() > 3) {
++			DWORD space;
++			if (!ranged || !parse_declaration_space(w, 3, &space))
++				throw AssemblerParseError(s, "Resource register space requires an explicit ranged operand");
++			v.push_back(space);
++		}
++		ins->length = (DWORD)v.size();
++		v[0] = op;
+ 	} else if (o == "dcl_uav_typed_texture1d") {
+ 		check_num_ops(s, w, 2);
+ 		vector<DWORD> os = assembleOp(w[2]);
+@@ -1767,14 +2027,23 @@ static vector<DWORD> assembleIns(string s)
+ 		v.insert(v.end(), os.begin(), os.end());
+ 		assembleResourceDeclarationType(&w[1], &v);
+ 	} else if (o == "dcl_resource_texture2d") {
+-		check_num_ops(s, w, 2);
+-		vector<DWORD> os = assembleOp(w[2]);
++		check_num_ops(s, w, 2, 3);
++		declaration_range_operand range;
++		bool ranged = parse_declaration_range_operand(w[2], "T", false, &range);
++		vector<DWORD> os = ranged ? assemble_declaration_range_operand(range, 7) : assembleOp(w[2]);
+ 		ins->opcode = 0x58;
+ 		ins->_11_23 = 3;
+-		ins->length = 4;
+ 		v.push_back(op);
+ 		v.insert(v.end(), os.begin(), os.end());
+ 		assembleResourceDeclarationType(&w[1], &v);
++		if (w.size() > 3) {
++			DWORD space;
++			if (!ranged || !parse_declaration_space(w, 3, &space))
++				throw AssemblerParseError(s, "Resource register space requires an explicit ranged operand");
++			v.push_back(space);
++		}
++		ins->length = (DWORD)v.size();
++		v[0] = op;
+ 	} else if (o == "dcl_uav_typed_buffer") {
+ 		check_num_ops(s, w, 2);
+ 		vector<DWORD> os = assembleOp(w[2]);
+@@ -1787,14 +2056,23 @@ static vector<DWORD> assembleIns(string s)
+ 		v.insert(v.end(), os.begin(), os.end());
+ 		assembleResourceDeclarationType(&w[1], &v);
+ 	} else if (o == "dcl_resource_texture3d") {
+-		check_num_ops(s, w, 2);
+-		vector<DWORD> os = assembleOp(w[2]);
++		check_num_ops(s, w, 2, 3);
++		declaration_range_operand range;
++		bool ranged = parse_declaration_range_operand(w[2], "T", false, &range);
++		vector<DWORD> os = ranged ? assemble_declaration_range_operand(range, 7) : assembleOp(w[2]);
+ 		ins->opcode = 0x58;
+ 		ins->_11_23 = 5;
+-		ins->length = 4;
+ 		v.push_back(op);
+ 		v.insert(v.end(), os.begin(), os.end());
+ 		assembleResourceDeclarationType(&w[1], &v);
++		if (w.size() > 3) {
++			DWORD space;
++			if (!ranged || !parse_declaration_space(w, 3, &space))
++				throw AssemblerParseError(s, "Resource register space requires an explicit ranged operand");
++			v.push_back(space);
++		}
++		ins->length = (DWORD)v.size();
++		v[0] = op;
+ 	} else if (o == "dcl_uav_typed_texture3d") {
+ 		check_num_ops(s, w, 2);
+ 		vector<DWORD> os = assembleOp(w[2]);
+@@ -1807,32 +2085,59 @@ static vector<DWORD> assembleIns(string s)
+ 		v.insert(v.end(), os.begin(), os.end());
+ 		assembleResourceDeclarationType(&w[1], &v);
+ 	} else if (o == "dcl_resource_texturecube") {
+-		check_num_ops(s, w, 2);
+-		vector<DWORD> os = assembleOp(w[2]);
++		check_num_ops(s, w, 2, 3);
++		declaration_range_operand range;
++		bool ranged = parse_declaration_range_operand(w[2], "T", false, &range);
++		vector<DWORD> os = ranged ? assemble_declaration_range_operand(range, 7) : assembleOp(w[2]);
+ 		ins->opcode = 0x58;
+ 		ins->_11_23 = 6;
+-		ins->length = 4;
+ 		v.push_back(op);
+ 		v.insert(v.end(), os.begin(), os.end());
+ 		assembleResourceDeclarationType(&w[1], &v);
++		if (w.size() > 3) {
++			DWORD space;
++			if (!ranged || !parse_declaration_space(w, 3, &space))
++				throw AssemblerParseError(s, "Resource register space requires an explicit ranged operand");
++			v.push_back(space);
++		}
++		ins->length = (DWORD)v.size();
++		v[0] = op;
+ 	} else if (o == "dcl_resource_texturecubearray") {
+-		check_num_ops(s, w, 2);
+-		vector<DWORD> os = assembleOp(w[2]);
++		check_num_ops(s, w, 2, 3);
++		declaration_range_operand range;
++		bool ranged = parse_declaration_range_operand(w[2], "T", false, &range);
++		vector<DWORD> os = ranged ? assemble_declaration_range_operand(range, 7) : assembleOp(w[2]);
+ 		ins->opcode = 0x58;
+ 		ins->_11_23 = 10;
+-		ins->length = 4;
+ 		v.push_back(op);
+ 		v.insert(v.end(), os.begin(), os.end());
+ 		assembleResourceDeclarationType(&w[1], &v);
++		if (w.size() > 3) {
++			DWORD space;
++			if (!ranged || !parse_declaration_space(w, 3, &space))
++				throw AssemblerParseError(s, "Resource register space requires an explicit ranged operand");
++			v.push_back(space);
++		}
++		ins->length = (DWORD)v.size();
++		v[0] = op;
+ 	} else if (o == "dcl_resource_texture2darray") {
+-		check_num_ops(s, w, 2);
+-		vector<DWORD> os = assembleOp(w[2]);
++		check_num_ops(s, w, 2, 3);
++		declaration_range_operand range;
++		bool ranged = parse_declaration_range_operand(w[2], "T", false, &range);
++		vector<DWORD> os = ranged ? assemble_declaration_range_operand(range, 7) : assembleOp(w[2]);
+ 		ins->opcode = 0x58;
+ 		ins->_11_23 = 8;
+-		ins->length = 4;
+ 		v.push_back(op);
+ 		v.insert(v.end(), os.begin(), os.end());
+ 		assembleResourceDeclarationType(&w[1], &v);
++		if (w.size() > 3) {
++			DWORD space;
++			if (!ranged || !parse_declaration_space(w, 3, &space))
++				throw AssemblerParseError(s, "Resource register space requires an explicit ranged operand");
++			v.push_back(space);
++		}
++		ins->length = (DWORD)v.size();
++		v[0] = op;
+ 	} else if (o == "dcl_uav_typed_texture2d") {
+ 		check_num_ops(s, w, 2);
+ 		vector<DWORD> os = assembleOp(w[2]);
+@@ -1894,28 +2199,51 @@ static vector<DWORD> assembleIns(string s)
+ 		check_num_ops(s, w, 1);
+ 		v.push_back(atoi(w[1].c_str()));
+ 	} else if (o == "dcl_resource_structured") {
+-		check_num_ops(s, w, 2);
+-		vector<DWORD> os = assembleOp(w[1]);
++		check_num_ops(s, w, 2, 3);
++		declaration_range_operand range;
++		bool ranged = parse_declaration_range_operand(w[1], "T", false, &range);
++		vector<DWORD> os = ranged ? assemble_declaration_range_operand(range, 7) : assembleOp(w[1]);
+ 		ins->opcode = 0xa2;
+-		ins->length = 4;
+ 		v.push_back(op);
+ 		v.insert(v.end(), os.begin(), os.end());
+ 		v.push_back(atoi(w[2].c_str()));
++		if (w.size() > 3) {
++			DWORD space;
++			if (!ranged || !parse_declaration_space(w, 3, &space))
++				throw AssemblerParseError(s, "Resource register space requires an explicit ranged operand");
++			v.push_back(space);
++		}
++		ins->length = (DWORD)v.size();
++		v[0] = op;
+ 	} else if (o == "dcl_sampler") {
+-		check_num_ops(s, w, 1, 2);
+-		vector<DWORD> os = assembleOp(w[1]);
+-		os[0] = 0x106000;
++		check_num_ops(s, w, 1, 3);
++		declaration_range_operand range;
++		bool ranged = parse_declaration_range_operand(w[1], "S", false, &range);
++		vector<DWORD> os = ranged ? assemble_declaration_range_operand(range, 6) : assembleOp(w[1]);
++		if (!ranged)
++			os[0] = 0x106000;
+ 		ins->opcode = 0x5a;
+-		if (w.size() > 2) {
+-			if (w[2] == "mode_default") {
+-				ins->_11_23 = 0;
+-			} else if (w[2] == "mode_comparison") {
+-				ins->_11_23 = 1;
+-			}
++		size_t next = 2;
++		if (next < w.size() && (w[next] == "mode_default" || w[next] == "mode_comparison")) {
++			ins->_11_23 = (w[next] == "mode_comparison") ? 1 : 0;
++			++next;
+ 		}
+-		ins->length = 1 + os.size();
++		bool has_space = false;
++		DWORD space = 0;
++		if (next < w.size()) {
++			if (!ranged || !parse_declaration_space(w, next, &space))
++				throw AssemblerParseError(w[next], "Expected one register-space operand after the sampler mode");
++			has_space = true;
++			++next;
++		}
++		if (next != w.size())
++			throw AssemblerParseError(w[next], "Duplicate or out-of-order sampler declaration operand");
+ 		v.push_back(op);
+ 		v.insert(v.end(), os.begin(), os.end());
++		if (has_space)
++			v.push_back(space);
++		ins->length = (DWORD)v.size();
++		v[0] = op;
+ 	} else if (o == "dcl_globalFlags") {
+ 		ins->opcode = 0x6a;
+ 		ins->length = 1;
+@@ -1951,18 +2279,34 @@ static vector<DWORD> assembleIns(string s)
+ 		}
+ 		v.push_back(op);
+ 	} else if (o == "dcl_constantbuffer") {
+-		check_num_ops(s, w, 1, 2);
+-		vector<DWORD> os = assembleOp(w[1]);
++		check_num_ops(s, w, 1, 3);
++		declaration_range_operand range;
++		bool ranged = parse_declaration_range_operand(w[1], "CB", true, &range);
++		vector<DWORD> os = ranged ? assemble_declaration_range_operand(range, 8) : assembleOp(w[1]);
+ 		ins->opcode = 0x59;
+-		if (w.size() > 2) {
+-			if (w[2] == "dynamicIndexed")
+-				ins->_11_23 = 1;
+-			else if (w[2] == "immediateIndexed")
+-				ins->_11_23 = 0;
++		size_t next = 2;
++		if (next < w.size() && (w[next] == "dynamicIndexed" || w[next] == "immediateIndexed")) {
++			ins->_11_23 = (w[next] == "dynamicIndexed") ? 1 : 0;
++			++next;
+ 		}
+-		ins->length = 1 + os.size();
++		if (ranged)
++			os.push_back(range.count);
++		bool has_space = false;
++		DWORD space = 0;
++		if (next < w.size()) {
++			if (!ranged || !parse_declaration_space(w, next, &space))
++				throw AssemblerParseError(w[next], "Expected one register-space operand after constant-buffer mode");
++			has_space = true;
++			++next;
++		}
++		if (next != w.size())
++			throw AssemblerParseError(w[next], "Duplicate or out-of-order constant-buffer declaration operand");
+ 		v.push_back(op);
+ 		v.insert(v.end(), os.begin(), os.end());
++		if (has_space)
++			v.push_back(space);
++		ins->length = (DWORD)v.size();
++		v[0] = op;
+ 	} else if (o == "dcl_output_sgv") {
+ 		// Added and verified. Used when writing to SV_IsFrontFace in a
+ 		// geometry shader. -DarkStarSword
+
+diff --git a/portable_dxbc_cli.cpp b/portable_dxbc_cli.cpp
+index 0000000..0000000 100644
+--- a/portable_dxbc_cli.cpp
++++ b/portable_dxbc_cli.cpp
+@@ -93,7 +93,7 @@ static bool validate_shader_container(const vector<byte> &bytes, string *error)
+-    if (stage != 0 && stage != 1 && stage != 3 && stage != 4) {
++    if (stage != 0 && stage != 1 && stage != 3 && stage != 4 && stage != 5) {
+         *error = "DXBC shader stage is outside the supported Replay shader set"; return false;
+     }
+
+diff --git a/D3D_Shaders/Assembler.cpp b/D3D_Shaders/Assembler.cpp
+index 0000000..0000000 100644
+--- a/D3D_Shaders/Assembler.cpp
++++ b/D3D_Shaders/Assembler.cpp
+@@ -2263,6 +2263,8 @@
+ 			if (s == "enable11_1ShaderExtensions")
+ 				ins->_11_23 |= 0x80;
++			if (s == "allResourcesBound")
++				ins->_11_23 |= 0x100;
+ 		}

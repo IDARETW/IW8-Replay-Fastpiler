@@ -1,0 +1,8 @@
+pefile==2024.8.26
+capstone==5.0.9
+unicorn==2.1.4
+numpy==2.5.3
+soundfile==0.14.0
+cffi==2.1.1
+pycparser==3.0
+typing_extensions==4.16.0

@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "project": "iw8-gsc-string-decryptor",
+  "repository": "https://github.com/IDARETW/iw8-gsc-string-decryptor.git",
+  "canonical_upstream": "https://github.com/IDARETW/iw8-gsc-string-decryptor.git",
+  "base_commit": "7f73bdf985b34f57d007a984d07beb7bd846685f",
+  "license": "MIT",
+  "license_path": "LICENSE",
+  "license_sha256": "7821aacaeba32b48adc9b7ceac84be3aa97dba38da4500282168616f8071c831",
+  "files": {
+    "gsc_encstr_dump.py": "ab996cf050850cf0968eabbce92739b2ad8b73cddd791ac53dbaa64d978abf48",
+    "iw8_string_tables.py": "fabf29475c4146f26753ba06ff7c238cb1d69c214a33886c38d31e04c3dbcbd2"
+  },
+  "transform": "1.59-1.67",
+  "range_note": "The transform is documented through 1.67. For 1.69 inputs, only exact same-asset decompiler token matches with printable output may be rewritten; all other typed source spans remain unchanged."
+}
