@@ -59,7 +59,7 @@ def compiler_identity():
             'sha256': _compiler_digest(str(compiler), stat.st_size, stat.st_mtime_ns)}
 
 
-def compile_check(root, content, symbol, language='cpp'):
+def compile_check(root, content, symbol, language='cpp', source_path=None):
     """Compile a real AMD64 COFF object, check ownership, retain no project edits."""
     import coff
     compiler = compiler_identity()
@@ -71,15 +71,29 @@ def compile_check(root, content, symbol, language='cpp'):
                    '-std=c17' if language == 'c' else '-std=c++20', '-c', str(path),
                    '-o', str(obj), '-O2', '-ffreestanding', '-fno-stack-protector',
                    '-funwind-tables', '-ffunction-sections', '-fdata-sections',
-                   '-Wall', '-Wextra', '-Werror', '-I', str(Path(root) / 'src')]
+                    '-Wall', '-Wextra', '-Werror', '-ffp-contract=off', '-I', str(Path(root) / 'src')]
+        if source_path is not None:
+            command += ['-I', str(Path(source_path).resolve().parent)]
         if language != 'c':
             command += ['-fno-exceptions', '-fno-rtti']
+        # The same include snapshot is checked before and after compilation.
+        # This includes standard and transitive headers, just like the build.
+        import source_provenance
+        dependency_file = Path(directory) / 'candidate.d'
+        dependency_command = command + ['-M', '-MF', str(dependency_file), '-MT', 'replay_deps', '-Wno-unused-command-line-argument']
+        dependency_result = subprocess.run(dependency_command, capture_output=True, text=True, timeout=30)
+        if dependency_result.returncode:
+            return {'compiled': False, 'diagnostics': (dependency_result.stdout + dependency_result.stderr)[:24000],
+                    'language': language, 'target': 'x86_64-pc-windows-msvc'}
+        dependencies = source_provenance.snapshots(source_provenance.parse_dependencies(dependency_file.read_text()))
         result = subprocess.run(command, capture_output=True, text=True, timeout=30)
         diagnostics = (result.stdout + result.stderr).replace(str(path), 'candidate').strip()
         if result.returncode:
             return {'compiled': False, 'diagnostics': diagnostics[:24000],
                     'language': language, 'target': 'x86_64-pc-windows-msvc'}
         parsed = coff.read(obj)
+        if dependencies != source_provenance.snapshots(source_provenance.parse_dependencies(dependency_file.read_text())):
+            raise ValueError('Included headers changed during source validation; retry')
         if compiler_identity() != compiler:
             raise ValueError('Compiler changed during validation; check the current source again')
         coff_symbol = symbol
@@ -88,7 +102,7 @@ def compile_check(root, content, symbol, language='cpp'):
             from mapped_cpp_aliases import resolve_definition
             record = {'source': str(path), 'source_sha256': digest(content),
                       'object': str(obj), 'object_sha256': hashlib.sha256(obj.read_bytes()).hexdigest(),
-                      'compiler': compiler, 'command': command, 'dependencies': []}
+                       'compiler': compiler, 'command': command, 'dependencies': dependencies}
             try:
                 definition = resolve_definition(record, symbol, parsed, Path(root))
             except ValueError as error:
@@ -108,6 +122,7 @@ def compile_check(root, content, symbol, language='cpp'):
         return {'compiled': True, 'diagnostics': diagnostics, 'language': language,
                 'target': 'x86_64-pc-windows-msvc', 'symbol': symbol, 'coff_symbol': coff_symbol,
                 'compiler': compiler,
+                 'dependencies': [item for item in dependencies if Path(item['path']) != path],
                 'object_sha256': hashlib.sha256(obj.read_bytes()).hexdigest(),
                 'code_hex': section['data'][entry['value']:].hex(),
                 'relocations': len(section['relocations']),
@@ -282,7 +297,16 @@ class CppSourceIndex:
 
     def _read(self, db, row, tables):
         columns = {r[1] for r in db.execute('PRAGMA table_info(functions)')}
-        if self.addresses is None:
+        selected = [c for c in ('name', 'prototype', 'prototype2', 'pseudocode', 'size') if c in columns]
+        value = None
+        # The recovered catalog carries SQLite's indexed primary key. Verify
+        # its native address before using it; old catalogs retain the fallback.
+        if 'id' in columns and row.get('database_id') is not None:
+            found = db.execute('SELECT address,' + ','.join(selected) + ' FROM functions WHERE id=?',
+                               (row['database_id'],)).fetchone()
+            if found and source_catalog.parse_integer(found[0], 'address') - self.manifest['image_base'] == row['rva']:
+                value = found[1:]
+        if value is None and self.addresses is None:
             addresses = {}
             for (address,) in db.execute('SELECT address FROM functions'):
                 try:
@@ -291,15 +315,15 @@ class CppSourceIndex:
                     continue
                 addresses[rva] = address
             self.addresses = addresses
-        address = self.addresses.get(row['rva'])
-        if address is None:
+        address = self.addresses.get(row['rva']) if self.addresses is not None else None
+        if value is None and address is None:
             found = db.execute('SELECT address FROM functions WHERE address IN (?,?,?)',
                                (str(self.manifest['image_base'] + row['rva']),
                                 hex(self.manifest['image_base'] + row['rva']),
                                 f"0x{self.manifest['image_base'] + row['rva']:X}")).fetchone()
             address = found[0] if found else None
-        selected = [c for c in ('name', 'prototype', 'prototype2', 'pseudocode', 'size') if c in columns]
-        value = db.execute('SELECT ' + ','.join(selected) + ' FROM functions WHERE address=?', (address,)).fetchone() if address is not None else None
+        if value is None:
+            value = db.execute('SELECT ' + ','.join(selected) + ' FROM functions WHERE address=?', (address,)).fetchone() if address is not None else None
         result = dict(zip(selected, value)) if value is not None else {}
         if 'replay_ida_function_text' in tables:
             override = db.execute(self._override_query(db, tables) + ' WHERE t.function_rva IN (?,?)',

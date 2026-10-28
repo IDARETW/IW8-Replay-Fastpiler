@@ -767,7 +767,7 @@ class SourceWorkspace:
             path = (self.root / user["path"]).resolve()
             if not path.is_relative_to(self.root / "src") or not path.is_file():
                 raise ValueError("Managed user C++ source is missing or outside src/")
-            content = path.read_text(encoding="utf-8")
+            content = path.read_bytes().decode("utf-8")
             if sha256(content.encode()) != user["sha256"]:
                 raise ValueError("Managed user source changed outside revision API")
             return {"id": identity, "name": user["name"], "variant": "cpp", "language": user.get('language', 'cpp'),
@@ -786,7 +786,7 @@ class SourceWorkspace:
         current = state.get(variant)
         if current:
             path = self.root / current["path"]
-            content = path.read_text(encoding="utf-8")
+            content = path.read_bytes().decode("utf-8")
             if sha256(content.encode()) != current["sha256"]:
                 raise ValueError(f"Workstation source changed outside revision API: {path}")
             return {"id": row["id"], "name": self._display_name(row), "variant": variant, "language": current["language"],
@@ -1349,6 +1349,124 @@ class SourceWorkspace:
         return result
 
     def save_source(self, identity, content, revision, variant="cpp", language=None):
+        from workstation.build_lock import compiler_lock
+        with compiler_lock(self.root / '.workstation-compiler.lock'):
+            return self._save_source_unlocked(identity, content, revision, variant, language)
+
+    def checkout_external(self, identity):
+        """Record an immutable edit base before a native file is opened in VS Code."""
+        import uuid
+        from workstation.build_lock import compiler_lock
+        with compiler_lock(self.root / '.workstation-compiler.lock'):
+            baseline = self.get_source(identity, 'cpp')
+            if not baseline.get('source'):
+                raise ValueError('Promote the recovered candidate before checking out an authored source')
+            path = (self.root / baseline['source']).resolve()
+            if not path.is_relative_to(self.root / 'src'):
+                raise ValueError('External editing is limited to authored files under src/')
+            ticket = self.root / 'analysis' / 'cpp-recovery' / 'edits' / (uuid.uuid4().hex + '.json')
+            metadata = [self.units_path, self.manifest_path, self.user_functions_path, self.root / 'source-units.json']
+            record = {'schema': 1, 'image_sha256': (self._catalog or self._load_catalog())['image_sha256'],
+                      'identity': baseline['id'], 'source': baseline['source'], 'symbol': baseline['symbol'],
+                      'language': baseline.get('language', 'cpp'), 'revision': baseline['revision'],
+                      'base_content': baseline['content'], 'consumed': False,
+                      'base_raw_hex': path.read_bytes().hex(),
+                      'metadata': [{'path': str(p), 'sha256': sha256(p.read_bytes()) if p.exists() else None} for p in metadata]}
+            _atomic_json(ticket, record)
+            return {'ticket': str(ticket), 'source': str(path), 'revision': baseline['revision'], 'symbol': baseline['symbol']}
+
+    def reconcile_external(self, ticket_path):
+        """Validate external edits and advance matching revision records together.
+
+        Neither source version is overwritten. A conflicting metadata snapshot
+        requires a fresh checkout after the versions have been reconciled.
+        """
+        from workstation.build_lock import compiler_lock
+        from workstation_cpp_sources import compile_check
+        ticket_path = Path(ticket_path).resolve()
+        if not ticket_path.is_relative_to(self.root / 'analysis' / 'cpp-recovery' / 'edits'):
+            raise ValueError('Select an edit ticket issued by this project')
+        with compiler_lock(self.root / '.workstation-compiler.lock'):
+            ticket = json.loads(ticket_path.read_text(encoding='utf-8'))
+            image = (self._catalog or self._load_catalog())['image_sha256']
+            if ticket.get('schema') != 1 or ticket.get('image_sha256') != image or ticket.get('consumed'):
+                raise ValueError('Stale, consumed or foreign edit ticket')
+            if sha256(ticket['base_content'].encode()) != ticket['revision']:
+                raise ValueError('Edit ticket base does not match its revision')
+            path = (self.root / ticket['source']).resolve()
+            if not path.is_relative_to(self.root / 'src') or not path.is_file():
+                raise ValueError('External source escapes src/ or is missing')
+            expected_paths = {str(p): p for p in (self.units_path, self.manifest_path, self.user_functions_path, self.root / 'source-units.json')}
+            if {item['path'] for item in ticket['metadata']} != set(expected_paths):
+                raise ValueError('Edit ticket metadata set is invalid')
+            def verify_metadata():
+                for item in ticket['metadata']:
+                    p = expected_paths[item['path']]
+                    if (sha256(p.read_bytes()) if p.exists() else None) != item['sha256']:
+                        raise ValueError('Revision conflict; metadata changed after checkout. Both source versions are preserved.')
+            verify_metadata()
+            raw = path.read_bytes()
+            content = raw.decode('utf-8')
+            digest = sha256(content.encode())
+            checked = compile_check(self.root, content, ticket['symbol'], ticket['language'], source_path=path)
+            if not checked['compiled']:
+                raise ValueError('External source did not compile; no metadata changed.\n' + checked['diagnostics'])
+            verify_metadata()
+            if path.read_bytes() != raw:
+                raise ValueError('External source changed during validation; retry')
+            changes = {}
+            for key, p in expected_paths.items():
+                if not p.exists() or p == self.root / 'source-units.json':
+                    continue
+                data = json.loads(p.read_text(encoding='utf-8'))
+                changed = False
+                if p == self.units_path:
+                    for unit in data.get('units', []):
+                        if unit.get('kind') == 'cpp' and unit.get('function_id') == ticket['identity']:
+                            if unit['revision'] != ticket['revision'] or unit['source'] != ticket['source']:
+                                raise ValueError('Compiled source revision conflicts with edit base')
+                            unit.update(sha256=digest, revision=digest)
+                            changed = True
+                elif p == self.manifest_path:
+                    prior = data.get('sources', {}).get(ticket['identity'], {}).get('cpp')
+                    user = data.get('user_sources', {}).get(ticket['identity'])
+                    for entry in (prior, user):
+                        if entry:
+                            if entry['revision'] != ticket['revision']:
+                                raise ValueError('Cached source revision conflicts with edit base')
+                            entry.update(sha256=digest, revision=digest)
+                            changed = True
+                elif p == self.user_functions_path:
+                    entry = data.get('functions', {}).get(ticket['identity'])
+                    if entry:
+                        if entry['revision'] != ticket['revision']:
+                            raise ValueError('User source revision conflicts with edit base')
+                        entry.update(sha256=digest, revision=digest)
+                        changed = True
+                if changed:
+                    changes[p] = data
+            history = self.cache_root / 'history' / ticket['identity'] / 'cpp' / (ticket['revision'] + '.txt')
+            history.parent.mkdir(parents=True, exist_ok=True)
+            if not history.exists():
+                history.write_bytes(bytes.fromhex(ticket.get('base_raw_hex', ticket['base_content'].encode().hex())))
+            revision_path = self.cache_root / 'revisions' / ticket['identity'] / 'cpp' / (digest + '.txt')
+            revision_path.parent.mkdir(parents=True, exist_ok=True)
+            revision_path.write_text(content, encoding='utf-8', newline='\n')
+            before = {p: p.read_bytes() for p in changes}
+            try:
+                for p, data in changes.items():
+                    _atomic_json(p, data)
+                ticket.update(consumed=True, new_revision=digest, validation=checked)
+                _atomic_json(ticket_path, ticket)
+            except Exception:
+                for p, previous in before.items():
+                    p.write_bytes(previous)
+                raise
+            return {'source': str(path), 'revision': digest, 'compiled': True,
+                    'behavior': 'intentional edit; baseline differential evidence must be updated separately',
+                    'metadata_updated': list(map(str, changes))}
+
+    def _save_source_unlocked(self, identity, content, revision, variant="cpp", language=None):
         if variant == "c":
             variant = "cpp"
         if variant not in ("cpp", "assembly", "pseudocode"):
@@ -1442,6 +1560,10 @@ class SourceWorkspace:
                     baseline_path.write_text(baseline["content"], encoding="utf-8", newline="\n")
         if revision != current_revision:
             raise ValueError("Revision conflict; reload the current source before saving")
+        if old:
+            prior_path = self.root / old['path']
+            if prior_path.exists() and sha256(prior_path.read_bytes()) != old['sha256']:
+                raise ValueError('Source has external edits; reconcile them before saving from the managed editor')
         digest = sha256(content.encode("utf-8"))
         new_revision = digest
         if old and old["sha256"] == digest:

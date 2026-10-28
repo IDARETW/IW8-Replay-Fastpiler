@@ -127,6 +127,18 @@ python tools/source_catalog.py bind-import <function-or-symbol-id> --symbol Nati
 
 The workstation provides the same association workflow through its source editor.
 
+## Windows C++ recovery and VS Code
+
+[CPP-RECOVERY.md](CPP-RECOVERY.md) describes selective IDA/RetDec recovery,
+experimental Striga lifting, differential tests, promotion, and external source
+editing. Open `ReplayCpp.code-workspace` after the setup above. Its build task
+compiles and links on Windows and runs the generic image and relocation checks.
+
+`src/recovered/` contains three unbound utility examples and a shared vector
+layout header. They are reference candidates, excluded from the top-level build
+until explicitly promoted. Source binding lists remain empty. Recovering LLVM IR
+does not by itself recover clean C++ or prove the original ABI.
+
 ## Optional asset tools
 
 Omit `-SkipAssetTools` to install the pinned GSC and texture tools and build the configured ACTS reader, Lua tools, and DXBC CLI:

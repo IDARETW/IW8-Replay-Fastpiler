@@ -34,6 +34,9 @@ ROOT_FILES = (
 OPTIONAL_DOCUMENTS = (
     "AGENTS.md", ".gitattributes", "CONTRIBUTING.md", "THIRD_PARTY_NOTICES.md",
     "docs/ARCHITECTURE.md", "src/.gitkeep",
+    "CPP-RECOVERY.md", "ReplayCpp.code-workspace",
+    "src/recovered/I_stricmp.cpp", "src/recovered/I_stristr.cpp",
+    "src/recovered/Vec3Normalize.cpp", "src/recovered/ReplayUtilityLayouts.h",
 )
 SEED_FILES = (
     "seed.json", "code-items.bin", "noncode-items.bin", "ida-rva-fixups.bin",
@@ -69,6 +72,13 @@ DXBC_SOURCE_PACKAGE_REQUIRED_FILES = {
     "LICENSE.MIT.txt", "COPYING.txt", "AUTHORS.txt", "README.md",
 }
 TOOL_ENTRYPOINTS = (
+    'cpp_recovery.py',
+    'setup_cpp_recovery.py',
+    'test_cpp_recovery_pilot.py',
+    'evaluate_striga.py',
+    'run_recovered_cpp.py',
+    'prepare_cpp_runtime_proxy.py',
+    'probe_recovered_cpp_live.py',
     'backend_tests.py',
     'layout_tests.py',
     'image_reference_tests.py',

@@ -83,13 +83,43 @@
     },
     {
       "path": ".gitignore",
-      "size": 412,
-      "sha256": "aa5edc624885dcfcbf43a3e37d27e162df78e5f84ac943e247fed717ac90eed0"
+      "size": 458,
+      "sha256": "82caa85909c021efbf7b7b891605d060a37658497d0b4cb4e2e0c297424dd71a"
     },
     {
       "path": "AGENTS.md",
       "size": 640,
       "sha256": "bec96522b4bef5a0bda51d23dd7ef4be1dcc60c320f049060b731012ad7a99a8"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "size": 1477,
+      "sha256": "0b845a9d8db5ababb0cb1fbe48cb21647ef57854ebca665ab2cb0ddd8406523b"
+    },
+    {
+      "path": "CPP-RECOVERY.md",
+      "size": 7639,
+      "sha256": "21bc7e2d5047d9c66182f262da07894ce3ecfc71846355d59540a451188d4a91"
+    },
+    {
+      "path": "README.md",
+      "size": 9225,
+      "sha256": "cca6ed843b6a5cb820f939a3c02036f0fda283d33d7610ac56ff40832ef4de14"
+    },
+    {
+      "path": "ReplayCpp.code-workspace",
+      "size": 4061,
+      "sha256": "fa5183a5e1ae6cd0e94d1c64604d979309fae3b2ec2e64f42c26d2a35421e804"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "size": 1517,
+      "sha256": "c3c9bcb3d5b64a95d34e3f3cf87178743d49dd967bd7ddaf06b1c343b9770c65"
+    },
+    {
+      "path": "WORKSTATION.md",
+      "size": 2969,
+      "sha256": "84adffc1d2587ca27ffc915fc1b57af252bd2bddf783470f075b5397edc7c6d8"
     },
     {
       "path": "analysis/replay120/code-items.bin",
@@ -137,11 +167,6 @@
       "sha256": "53723fa7245445e716a764f05a7a579ac9d3d059534602922adcf16739df23f2"
     },
     {
-      "path": "CONTRIBUTING.md",
-      "size": 1477,
-      "sha256": "0b845a9d8db5ababb0cb1fbe48cb21647ef57854ebca665ab2cb0ddd8406523b"
-    },
-    {
       "path": "docs/ARCHITECTURE.md",
       "size": 3331,
       "sha256": "8c58a5e3bf5518a3fb0d15fb1c8a5af7474fd05b1baa9ebf7c1395bae21504e8"
@@ -150,11 +175,6 @@
       "path": "prepare-run.ps1",
       "size": 16645,
       "sha256": "d72a20cdc4a1ba874519eefaa0a02d3079871a0fbb7729e9bef349e83a755687"
-    },
-    {
-      "path": "README.md",
-      "size": 8557,
-      "sha256": "c5aa8d38136cedcb6b2de4834d3d0279d49207e57ed171c4499ddc5652e67e71"
     },
     {
       "path": "requirements.txt",
@@ -190,6 +210,26 @@
       "path": "src/.gitkeep",
       "size": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/recovered/I_stricmp.cpp",
+      "size": 715,
+      "sha256": "f69df4b8a6f140ae58f591bb8bc71510ed153c3351dc296bf40a504266015a97"
+    },
+    {
+      "path": "src/recovered/I_stristr.cpp",
+      "size": 760,
+      "sha256": "a3356a773a2547932de5b3967a6154c4dbf6e8311e09e1825c2dbd005507a959"
+    },
+    {
+      "path": "src/recovered/ReplayUtilityLayouts.h",
+      "size": 489,
+      "sha256": "0d7b129763c743aa04c2b2be3f7d964870fd504b0c9a5a7bf1af09a4e41cc27f"
+    },
+    {
+      "path": "src/recovered/Vec3Normalize.cpp",
+      "size": 758,
+      "sha256": "4e5a0f5fc798092b4c17a71341f8f1f9c53279129afbd188f2720a64c90ceec5"
     },
     {
       "path": "start-workstation.ps1",
@@ -407,6 +447,11 @@
       "sha256": "6483e3bacd00ed8155589dc639b73d6666126f294b431b2b0b3705243e923e7f"
     },
     {
+      "path": "tests/test_cpp_recovery.py",
+      "size": 10134,
+      "sha256": "0dca727a7ddad752530b91d7a5f80dc428a4ef06ce02f60c055807fdf07625d8"
+    },
+    {
       "path": "tests/test_cpp_symbol_preflight.py",
       "size": 4582,
       "sha256": "498b41d16ec675a4a1fc3501e736993000094cb4ac57613e7b7e1f7014ef5c0d"
@@ -500,6 +545,11 @@
       "path": "tests/test_roundtrip_replay_fastfile_short_output.py",
       "size": 14404,
       "sha256": "e1311cc37fc381c4c1e323266b06eebe54b74b437e4d1f4aa9113a45031345b6"
+    },
+    {
+      "path": "tests/test_run_recovered_cpp.py",
+      "size": 4614,
+      "sha256": "46ab1b735139ac61acc423124e1c98e3519f491a91d36a011d98bd3cca297fde"
     },
     {
       "path": "tests/test_scriptfile_temporal_alias_audit.py",
@@ -1012,6 +1062,11 @@
       "sha256": "f8591483317b7c15d4cc57e17ab39a352376ff78a9eedf4b29d12beec804cc5b"
     },
     {
+      "path": "third_party/3dmigoto-dxbc-1.3.16/README.md",
+      "size": 931,
+      "sha256": "bfc6d0fbb8f61a3fadeedcd12f759bdaaed5fd2c4e37673ffd61790c9c25ef11"
+    },
+    {
       "path": "third_party/3dmigoto-dxbc-1.3.16/log.h",
       "size": 1769,
       "sha256": "d8502b3b4a5f98f4b936b006601b45ab69818681a9c1900887df780b062502d2"
@@ -1020,11 +1075,6 @@
       "path": "third_party/3dmigoto-dxbc-1.3.16/portable_dxbc_cli.cpp",
       "size": 12328,
       "sha256": "dfa0d1327156aae9fe097fd1406f60f94de40508b6f7a816cd2e756cb7dc7fcb"
-    },
-    {
-      "path": "third_party/3dmigoto-dxbc-1.3.16/README.md",
-      "size": 931,
-      "sha256": "bfc6d0fbb8f61a3fadeedcd12f759bdaaed5fd2c4e37673ffd61790c9c25ef11"
     },
     {
       "path": "third_party/3dmigoto-dxbc-1.3.16/shader.h",
@@ -1050,11 +1100,6 @@
       "path": "third_party/acts-patches/manifest.json",
       "size": 1789,
       "sha256": "fc609f0b26280abb890863ee19f0ac60c95db0f68185956d0dd4777f8488ca2e"
-    },
-    {
-      "path": "THIRD_PARTY_NOTICES.md",
-      "size": 1517,
-      "sha256": "c3c9bcb3d5b64a95d34e3f3cf87178743d49dd967bd7ddaf06b1c343b9770c65"
     },
     {
       "path": "tools/adopt_ida_snapshot.py",
@@ -1103,8 +1148,8 @@
     },
     {
       "path": "tools/build.py",
-      "size": 68074,
-      "sha256": "b62b74600fefcd870c08a166806ab586a290381ef82c1ce904e2e342d69e63da"
+      "size": 68095,
+      "sha256": "bcfe94b2520cf04c0f45206e94032f3ddaf25e283b32fbac5e14f9423c660b4c"
     },
     {
       "path": "tools/c3s5_material_namespace.py",
@@ -1122,14 +1167,24 @@
       "sha256": "ee307483d6beb0556722c3f798a69a272f4e20e781cc63ac898f0937c0564649"
     },
     {
+      "path": "tools/cpp_recovery.py",
+      "size": 27104,
+      "sha256": "813301045d993bfde8bb157b2cf6ad408b91c12884f763e0dd68df66399bf762"
+    },
+    {
       "path": "tools/cpp_symbol_preflight.py",
       "size": 10569,
       "sha256": "6c2ce69d03c8956dd6b474a09507d746a91ac647ba23fec6b0dec29f3bb928e5"
     },
     {
+      "path": "tools/evaluate_striga.py",
+      "size": 5743,
+      "sha256": "a3af01e0cd2fbcb7869d012f99d262e6266975feb9a092a654b7a6f1e3d7cbb7"
+    },
+    {
       "path": "tools/export_workstation.py",
-      "size": 29507,
-      "sha256": "f01f6d36e43d9cb3b9510faf0f6fd72f70fbee908579e7da146e2893fb86c8e4"
+      "size": 29924,
+      "sha256": "4ea79d53bfb4518f0eb160961146657fbca38e4535934d21ca49a184497f420c"
     },
     {
       "path": "tools/extract_reference_root_identities.py",
@@ -1252,6 +1307,11 @@
       "sha256": "85a5ef435df1a5f295ef6f35d59ba6df065a0476ede987e0a885591dcf9a0def"
     },
     {
+      "path": "tools/prepare_cpp_runtime_proxy.py",
+      "size": 2950,
+      "sha256": "990ca8b2391c566b833713cd871bb9f06a024968db8061ccc7dea28c3e928826"
+    },
+    {
       "path": "tools/prepare_run_custom_maps.ps1",
       "size": 5518,
       "sha256": "363fd070765c4d2c57360b29f96e9ce899fb8b4722081d703e06a2688d6c413d"
@@ -1260,6 +1320,11 @@
       "path": "tools/prepare_workstation.py",
       "size": 6361,
       "sha256": "ecefc6ce4b3ad4de59732097072e2bd5d82cd0e3841fb1dbcb80eb2c0afb73c9"
+    },
+    {
+      "path": "tools/probe_recovered_cpp_live.py",
+      "size": 2940,
+      "sha256": "0f892607cb3cf5922d6ee49dc806529f4b094163405f8f4dc92736e0431e27ae"
     },
     {
       "path": "tools/proxy_patterns.py",
@@ -1342,6 +1407,16 @@
       "sha256": "2764fea4dcedf6b29ebaf5fffe80f6dfa29df17f44fe80638e2410b0760f929b"
     },
     {
+      "path": "tools/run_recovered_cpp.py",
+      "size": 4978,
+      "sha256": "43638908da8d45f8613f357d40d778878de3098f986d163d909eebb531320633"
+    },
+    {
+      "path": "tools/setup_cpp_recovery.py",
+      "size": 4846,
+      "sha256": "3d3180c5fd96aec26f122c375637aeeca181a51843cccb21994d0b7f1d6fc782"
+    },
+    {
       "path": "tools/setup_workstation_tools.py",
       "size": 22992,
       "sha256": "10dc44bbcd60c04bfefd1cefa010fb022c18129b76664ee87f3f362903fe8446"
@@ -1370,6 +1445,11 @@
       "path": "tools/stage_frontend_meshes.py",
       "size": 5393,
       "sha256": "b95f17538092e606e0542549c02324872d0201303b4d0df25051cfa3d4e6a53d"
+    },
+    {
+      "path": "tools/test_cpp_recovery_pilot.py",
+      "size": 13931,
+      "sha256": "1049fe90cad420c762f440865f52e1035435afe9b2d2e2caaa3f0470b2d0091b"
     },
     {
       "path": "tools/test_workstation_native_asset_edits.py",
@@ -1458,8 +1538,8 @@
     },
     {
       "path": "tools/workstation_cpp_sources.py",
-      "size": 32916,
-      "sha256": "d23ea2daf685b331332b62bf3e0bb91271e326822b8835712a1024d808f959af"
+      "size": 34895,
+      "sha256": "2153dfff097fbfb860caa8cfa97096607eb4eaea72303690587dff6add9a837f"
     },
     {
       "path": "tools/workstation_d3d12_checkpoints.py",
@@ -1683,8 +1763,8 @@
     },
     {
       "path": "tools/workstation_sources.py",
-      "size": 98822,
-      "sha256": "a8d9807308dec3939cfb0fe3f8ffd30fc946f97ca41d5cf4c8b7d204a2409d90"
+      "size": 107038,
+      "sha256": "5f93de34f4ab495ff882eef5f3ad07e5db1a42d1c863e7476b80fbafa8ea7c41"
     },
     {
       "path": "tools/workstation_stringtable.py",
@@ -1725,11 +1805,6 @@
       "path": "tools/workstation_zone_merge.py",
       "size": 46133,
       "sha256": "983ed51a6664d90e01a7db457ff1501fae246188fe6a506251fdf418f608c5e4"
-    },
-    {
-      "path": "WORKSTATION.md",
-      "size": 2969,
-      "sha256": "84adffc1d2587ca27ffc915fc1b57af252bd2bddf783470f075b5397edc7c6d8"
     },
     {
       "path": "workstation/__init__.py",
@@ -1896,5 +1971,6 @@
       "size": 5535,
       "sha256": "34d2fd15dc9a1ba27456116138f357de994d8a75d7d91c2041ad15e5929900c2"
     }
-  ]
+  ],
+  "cpp_recovery": "Windows selective recovery, unbound C++ utility candidates, revision-safe external editing, optional Striga evaluation"
 }

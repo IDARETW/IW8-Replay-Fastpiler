@@ -1,0 +1,88 @@
+{
+  "folders": [{ "path": "." }],
+  "settings": {
+    "files.eol": "\n",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
+    "clangd.arguments": ["--compile-commands-dir=${workspaceFolder}"],
+    "files.exclude": { ".toolchains": true, "cache": true, "generated/asm": true },
+    "search.exclude": { ".toolchains": true, "build*": true, "generated": true, "analysis": true }
+  },
+  "extensions": { "recommendations": ["ms-vscode.cpptools", "ms-python.python"] },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Replay: recover IDA reference",
+        "type": "process", "command": "python",
+        "args": ["${workspaceFolder}/tools/cpp_recovery.py", "recover", "${input:identity}"],
+        "options": { "cwd": "${workspaceFolder}" }, "problemMatcher": []
+      },
+      {
+        "label": "Replay: recover LLVM IR and C on Windows",
+        "type": "process", "command": "python",
+        "args": ["${workspaceFolder}/tools/cpp_recovery.py", "recover", "${input:identity}", "--backend", "retdec"],
+        "options": { "cwd": "${workspaceFolder}" }, "problemMatcher": []
+      },
+      {
+        "label": "Replay: evaluate experimental Striga IR",
+        "type": "process", "command": "python",
+        "args": ["${workspaceFolder}/tools/evaluate_striga.py"],
+        "options": { "cwd": "${workspaceFolder}" }, "problemMatcher": []
+      },
+      {
+        "label": "Replay: validate current C++ file",
+        "type": "process", "command": "python",
+        "args": ["${workspaceFolder}/tools/cpp_recovery.py", "validate", "${file}", "--symbol", "${input:symbol}"],
+        "options": { "cwd": "${workspaceFolder}" }, "problemMatcher": []
+      },
+      {
+        "label": "Replay: begin external edit",
+        "type": "process", "command": "python",
+        "args": ["${workspaceFolder}/tools/cpp_recovery.py", "checkout", "${input:identity}"],
+        "options": { "cwd": "${workspaceFolder}" }, "problemMatcher": []
+      },
+      {
+        "label": "Replay: register current external edit",
+        "type": "process", "command": "python",
+        "args": ["${workspaceFolder}/tools/cpp_recovery.py", "reconcile", "--source", "${file}"],
+        "options": { "cwd": "${workspaceFolder}" }, "problemMatcher": []
+      },
+      {
+        "label": "Replay: test recovered functions",
+        "type": "process", "command": "python",
+        "args": ["${workspaceFolder}/tools/test_cpp_recovery_pilot.py"],
+        "options": { "cwd": "${workspaceFolder}" }, "problemMatcher": []
+      },
+      {
+        "label": "Replay: build and verify on Windows",
+        "type": "process", "command": "python",
+        "args": ["${workspaceFolder}/tools/cpp_recovery.py", "build"],
+        "options": { "cwd": "${workspaceFolder}" }, "problemMatcher": "$gcc",
+        "group": { "kind": "build", "isDefault": true }
+      },
+      {
+        "label": "Replay: prepare Windows startup proxy",
+        "type": "process", "command": "python",
+        "args": ["${workspaceFolder}/tools/prepare_cpp_runtime_proxy.py"],
+        "options": { "cwd": "${workspaceFolder}" }, "problemMatcher": []
+      },
+      {
+        "label": "Replay: launch verified isolated build",
+        "type": "process", "command": "python",
+        "args": ["${workspaceFolder}/tools/run_recovered_cpp.py"],
+        "options": { "cwd": "${workspaceFolder}" }, "problemMatcher": [],
+        "dependsOn": ["Replay: prepare Windows startup proxy"]
+      },
+      {
+        "label": "Replay: refresh IntelliSense commands",
+        "type": "process", "command": "python",
+        "args": ["${workspaceFolder}/tools/cpp_recovery.py", "workspace"],
+        "options": { "cwd": "${workspaceFolder}" }, "problemMatcher": []
+      }
+    ],
+    "inputs": [
+      { "id": "identity", "type": "promptString", "description": "Stable function ID or unique catalog name", "default": "fn_2a385ed3a736c866" },
+      { "id": "symbol", "type": "promptString", "description": "Function symbol defined by this file", "default": "I_stricmp" }
+    ]
+  }
+}

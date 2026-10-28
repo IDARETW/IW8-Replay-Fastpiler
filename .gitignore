@@ -36,3 +36,6 @@ headtmp/
 .env.*
 credentials*.json
 player-identity*
+
+compile_commands.json
+analysis/cpp-recovery/

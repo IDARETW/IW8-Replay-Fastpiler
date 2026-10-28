@@ -141,7 +141,7 @@ def compile_one(source, target, cpp=False, previous=None):
             arguments[1:1] = ['-x', 'c']
         arguments.extend(["-ffreestanding", "-fno-stack-protector",
                           "-funwind-tables", "-ffunction-sections", "-fdata-sections",
-                          "-O2", "-std=c17" if c_language else "-std=c++20", "-Wall", "-Wextra", "-Werror"])
+                          "-O2", "-ffp-contract=off", "-std=c17" if c_language else "-std=c++20", "-Wall", "-Wextra", "-Werror"])
         if not c_language:
             arguments.extend(['-fno-exceptions', '-fno-rtti'])
     compiler = tool_identity(arguments[0])
